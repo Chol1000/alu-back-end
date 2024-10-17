@@ -1,27 +1,33 @@
 #!/usr/bin/python3
-"""
-Using a REST API, and a given emp_ID, return info about their TODO list.
-"""
 import requests
 import sys
 
-
 if __name__ == "__main__":
-    """ main section """
-    BASE_URL = 'https://jsonplaceholder.typicode.com'
-    employee = requests.get(
-        BASE_URL + f'/users/{sys.argv[1]}/').json()
-    EMPLOYEE_NAME = employee.get("name")
-    employee_todos = requests.get(
-        BASE_URL + f'/users/{sys.argv[1]}/todos').json()
-    serialized_todos = {}
+    if len(sys.argv) != 2:
+        print("Usage: ./0-gather_data_from_an_API.py <employee_id>")
+        sys.exit(1)
 
-    for todo in employee_todos:
-        serialized_todos.update({todo.get("title"): todo.get("completed")})
+    employee_id = sys.argv[1]
 
-    COMPLETED_LEN = len([k for k, v in serialized_todos.items() if v is True])
-    print("Employee {} is done with tasks({}/{}):".format(
-        EMPLOYEE_NAME, COMPLETED_LEN, len(serialized_todos)))
-    for key, val in serialized_todos.items():
-        if val is True:
-            print("\t {}".format(key))
+    # Get the employee's information
+    url_user = f"https://jsonplaceholder.typicode.com/users/{employee_id}"
+    user_response = requests.get(url_user)
+    user = user_response.json()
+
+    # Get the employee's TODO list
+    url_todos = f"https://jsonplaceholder.typicode.com/todos?userId={employee_id}"
+    todos_response = requests.get(url_todos)
+    todos = todos_response.json()
+
+    # Employee name
+    employee_name = user.get('name')
+
+    # Completed tasks and total tasks
+    completed_tasks = [task.get('title') for task in todos if task.get('completed')]
+    total_tasks = len(todos)
+
+    # Display the output
+    print(f"Employee {employee_name} is done with tasks({len(completed_tasks)}/{total_tasks}):")
+    for task in completed_tasks:
+        print(f"\t {task}")
+
