@@ -1,27 +1,35 @@
 #!/usr/bin/python3
-""""Module"""
-
+"""
+Using a REST API and an EMP_ID, save info about their TODO list in a json file
+"""
 import json
 import requests
 import sys
 
-if __name__ == '__main__':
-    employee_id = sys.argv[1]
-    user_url = "https://jsonplaceholder.typicode.com/users/{}" \
-        .format(employee_id)
-    todos_url = "https://jsonplaceholder.typicode.com/users/{}/todos/" \
-        .format(employee_id)
+if __name__ == "__main__":
+    """ Main section """
+    BASE_URL = 'https://jsonplaceholder.typicode.com'
+    employee_id = sys.argv[1] if len(sys.argv) > 1 else None
 
-    user_info = requests.request('GET', user_url).json()
-    todos_info = requests.request('GET', todos_url).json()
+    if not employee_id:
+        print("Please provide an employee ID as an argument.")
+        sys.exit(1)
 
-    employee_username = user_info["username"]
+    employee = requests.get(f"{BASE_URL}/users/{employee_id}/").json()
+    employee_name = employee.get("username")
+    emp_todos = requests.get(f"{BASE_URL}/users/{employee_id}/todos").json()
+    serialized_todos = []
 
-    todos_info_sorted = [
-        dict(zip(["task", "completed", "username"],
-                 [task["title"], task["completed"], employee_username]))
-        for task in todos_info]
+    for todo in emp_todos:
+        serialized_todos.append({
+            "task": todo.get("title"),
+            "completed": todo.get("completed"),
+            "username": employee_name
+        })
 
-    user_dict = {str(employee_id): todos_info_sorted}
-    with open(str(employee_id) + '.json', "w") as file:
-        file.write(json.dumps(user_dict))
+    output_data = {employee_id: serialized_todos}
+
+    with open(f"{employee_id}.json", 'w') as file:
+        json.dump(output_data, file, indent=4)
+
+    print(f"Tasks for employee {employee_id} exported to {file_name}.")
